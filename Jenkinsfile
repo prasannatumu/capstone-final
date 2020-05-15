@@ -59,6 +59,7 @@ pipeline {
 			steps {
                 dir('k8s') {
 			sshagent(['ec2-machine']) {
+				sh "scp -o StrictHostKeyChecking=no service.yaml ubuntu@18.236.78.139:/home/ubuntu/"
 					    sh '''
 						    ssh ubuntu@18.236.78.139 kubectl apply -f service.yaml
 					    '''
