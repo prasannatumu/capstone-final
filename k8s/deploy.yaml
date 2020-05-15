@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: capstone-image
-          image: nofsky/udacity-static-capstone
+          image: pras1905/udacity-static-capstone
           imagePullPolicy: Always
           ports:
             - name: http
