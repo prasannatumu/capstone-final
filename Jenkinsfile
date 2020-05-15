@@ -50,7 +50,7 @@ pipeline {
             steps {
                 dir('k8s') {
                     withAWS(credentials: 'mini', region: 'us-west-2') {
-                            sh "aws eks --region us-west-2 update-kubeconfig --name eks-cluster-EKS-Cluster"
+                            sh "aws eks --region us-west-2 update-kubeconfig --name eks-cluster-EKS-Cluster --role-arn arn:aws:iam::063684395745:role/eks-cluster-EKS-Cluster-Role"
                         }
                     }
             }
