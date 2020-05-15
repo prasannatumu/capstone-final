@@ -58,11 +58,11 @@ pipeline {
         stage('Apply service.yaml') {
 			steps {
                 dir('k8s') {
-				    withAWS(region:'us-west-2', credentials:'mini') {
+			sshagent(['ec2-machine']) {
 					    sh '''
-						    kubectl apply -f service.yaml
+						    ssh ubuntu@18.236.78.139 kubectl apply -f service.yaml
 					    '''
-                    }
+                    				}
 				}
 			}
 		}
