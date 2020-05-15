@@ -50,7 +50,7 @@ pipeline {
             steps {
                 dir('k8s') {
                     withAWS(credentials: 'mini', region: 'us-west-2') {
-                            sh "aws eks --region us-west-2 update-kubeconfig --name eks-cluster-EKS-Cluster --role-arn arn:aws:iam::063684395745:role/eks-cluster-EKS-Cluster-Role"
+                            sh "aws eks --region us-west-2 update-kubeconfig --name eks-cluster-EKS-Cluster"
                         }
                     }
             }
@@ -58,10 +58,9 @@ pipeline {
         stage('Apply service.yaml') {
 			steps {
                 dir('k8s') {
-			sshagent(['ec2-machine']) {
-				sh "scp -o StrictHostKeyChecking=no service.yaml ubuntu@18.236.78.139:/home/ubuntu/"
+				withAWS(region:'us-west-2', credentials:'mini') {
 					    sh '''
-						    ssh ubuntu@18.236.78.139 kubectl apply -f service.yaml
+						    kubectl apply -f service.yaml
 					    '''
                     				}
 				}
