@@ -50,13 +50,43 @@ pipeline {
             steps {
                 dir('k8s') {
                     withAWS(credentials: 'mini', region: 'us-west-2') {
-                            sh "aws eks --region us-west-2 update-kubeconfig --name eks-cluster-EKS-Cluster" 
-                            sh "kubectl apply -f service.yaml"
-                            sh "kubectl apply -f deploy.yaml"
-                            sh "kubectl set image --record -f deploy.yaml capstone-image=pras1905/udacity-static-capstone:${env.BUILD_ID}"
+                            sh "aws eks --region us-west-2 update-kubeconfig --name eks-cluster-EKS-Cluster"
                         }
                     }
             }
         }
+        stage('Apply service.yaml') {
+			steps {
+                dir('k8s') {
+				    withAWS(region:'us-west-2', credentials:'mini') {
+					    sh '''
+						    kubectl apply -f service.yaml
+					    '''
+                    }
+				}
+			}
+		}
+        stage('Apply deploy.yaml') {
+			steps {
+                dir('k8s') {
+				    withAWS(region:'us-west-2', credentials:'mini') {
+					    sh '''
+						    kubectl apply -f deploy.yaml
+					    '''
+                    }
+				}
+			}
+		}
+        stage('Set Image') {
+			steps {
+                dir('k8s') {
+				    withAWS(region:'us-west-2', credentials:'mini') {
+					    sh '''
+						    kubectl set image --record -f deploy.yaml capstone-image=pras1905/udacity-static-capstone:${env.BUILD_ID}
+					    '''
+                    }
+				}
+			}
+		}
     }
 }
