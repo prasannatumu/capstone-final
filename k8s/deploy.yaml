@@ -1,11 +1,5 @@
 apiVersion: apps/v1
 kind: Deployment
-data:
-  mapUsers: |
-      - userarn: arn:aws:iam::063684395745:user/lakshmi
-        username: admin
-        groups:
-          - system:masters
 metadata:
   name: capstone-k8scluster-deploy
 spec:
