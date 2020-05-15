@@ -1,0 +1,103 @@
+---
+Description: >
+  Lakshmi Tumu | Udacity Cloud DevOps | Capstone Project
+  CloudFormation file to create EKS clusters.
+Parameters:
+  EnvironmentName:
+    Description: An Enviroment name to tag resources
+    ConstraintDescription: Your env is invalid! Please
+    Type: String
+    Default: dev
+
+Resources:
+  EKSClusterInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - eks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      RoleName: !Join ["-", [!Ref "AWS::StackName", "EKS-Cluster-Role"]]
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+        - arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+        - arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess
+
+  EKSClusterSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group EKS Cluster
+      GroupName:
+        !Join ["", [!Ref "AWS::StackName", "-EKS-Cluster-Security-Group"]]
+      VpcId:
+        Fn::ImportValue: !Sub "${EnvironmentName}-VPCID"
+      Tags:
+        - Key: !Sub "kubernetes.io/cluster/${AWS::StackName}-EKS-Cluster"
+          Value: "owned"
+        - Key: "Name"
+          Value:
+            !Join ["", [!Ref "AWS::StackName", "-EKS-Cluster-Security-Group"]]
+
+  EKSCluster:
+    Type: "AWS::EKS::Cluster"
+    Properties:
+      Name: !Join ["", [!Ref "AWS::StackName", "-EKS-Cluster"]]
+      ResourcesVpcConfig:
+        SecurityGroupIds:
+          - !Ref EKSClusterSecurityGroup
+        SubnetIds:
+          - Fn::ImportValue: !Sub "${EnvironmentName}-PB1-SN"
+          - Fn::ImportValue: !Sub "${EnvironmentName}-PB2-SN"
+      RoleArn: !GetAtt EKSClusterInstanceRole.Arn
+      Version: 1.14
+
+  WorkerNodeInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      RoleName: !Join ["-", [!Ref "AWS::StackName", "EKS-Worker-Node-Role"]]
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+
+  WorkerNode:
+    Type: AWS::EKS::Nodegroup
+    DependsOn: EKSCluster
+    Properties:
+      ClusterName: !Join ["", [!Ref "AWS::StackName", "-EKS-Cluster"]]
+      NodeRole: !GetAtt WorkerNodeInstanceRole.Arn
+      InstanceTypes:
+        - t2.micro
+      RemoteAccess:
+        Ec2SshKey: "demo"
+      Subnets:
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PB1-SN"
+        - Fn::ImportValue: !Sub "${EnvironmentName}-PB2-SN"
+      ScalingConfig:
+        DesiredSize: 2
+        MinSize: 1
+        MaxSize: 3
+
+Outputs:
+  EKSClusterName:
+    Description: The node instance role
+    Value: !Ref EKSCluster
+  EksUrl:
+    Description: EKS URL
+    Value: !GetAtt EKSCluster.Endpoint

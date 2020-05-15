@@ -1,0 +1,14 @@
+[
+    {
+      "ParameterKey": "EnvironmentName",
+      "ParameterValue": "dev"
+    },
+    {
+      "ParameterKey": "SourceIP",
+      "ParameterValue": "0.0.0.0/0"
+    },
+    {
+      "ParameterKey": "KeyPairName",
+      "ParameterValue": "demo"
+    }
+  ]

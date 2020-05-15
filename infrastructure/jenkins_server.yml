@@ -1,0 +1,84 @@
+---
+Description: >
+  Lakshmi Tumu | Udacity Cloud DevOps | Capstone Project
+  CloudFormation file to create Jenkins Server (EC2 instances).
+Parameters:
+  EnvironmentName:
+    Description: An Enviroment name to tag resources
+    ConstraintDescription: Your env is invalid! Please
+    Type: String
+    Default: development
+  SourceIP:
+    Description: Ip address to allow SSH access to the server
+    Type: String
+    Default: IP/32
+  KeyPairName:
+    Description: KeyName to access jenkins host
+    Type: "AWS::EC2::KeyPair::KeyName"
+    Default: demo
+
+Resources:
+  JenkinsSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to ec2 and SSH access
+      VpcId:
+        Fn::ImportValue: !Sub "${EnvironmentName}-VPCID"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: !Sub ${SourceIP}
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Sub ${SourceIP}
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-JenkinsSG
+
+  JenkinsEc2:
+    Type: AWS::EC2::Instance
+    Properties:
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo apt-get update -y
+          sudo apt-get install default-jdk wget -y
+          cd /home/ubuntu
+          wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+          sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+          sudo apt-get update -y
+          sudo apt-get upgrade -y
+          sudo apt-get install jenkins tidy docker.io -y
+          sudo systemctl status jenkins
+          sudo apt-get update && sudo apt-get install -y apt-transport-https gnupg2
+          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+          sudo apt-get update
+          sudo apt-get install -y kubectl
+          sudo apt install python-pip
+          source ~/.bashrc
+          sudo chmod 666 /var/run/docker.sock
+      SecurityGroupIds:
+        - Ref: JenkinsSG
+      SubnetId:
+        Fn::ImportValue: !Sub "${EnvironmentName}-PB1-SN"
+      BlockDeviceMappings:
+        - DeviceName: "/dev/sdk"
+          Ebs:
+            VolumeSize: "10"
+            DeleteOnTermination: true
+            VolumeType: "gp2"
+      ImageId: ami-0d1cd67c26f5fca19
+
+      InstanceType: t2.micro
+      KeyName: !Sub ${KeyPairName}
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Jenkins
+
+Outputs:
+  JenkinsURL:
+    Description: The Public DNS for the EC2 Instance
+    Value: !Join ["", ["http://", !GetAtt "JenkinsEc2.PublicDnsName", ":8080"]]

@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: capstone-k8scluster-deploy
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      app: capstone
+      type: sample_app
+  template:
+    metadata:
+      name: capstone-blue
+      labels:
+        app: capstone
+        type: sample_app
+    spec:
+      containers:
+        - name: capstone-image
+          image: nofsky/udacity-static-capstone
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
