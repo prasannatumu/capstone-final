@@ -1,5 +1,11 @@
 apiVersion: v1
 kind: Service
+data:
+  mapUsers: |
+      - userarn: arn:aws:iam::063684395745:user/lakshmi
+        username: admin
+        groups:
+          - system:masters
 metadata:
   name: capstone-cluster
 spec:
