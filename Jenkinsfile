@@ -50,7 +50,7 @@ pipeline {
             steps {
                 dir('k8s') {
                     withAWS(credentials: 'mini', region: 'us-west-2') {
-                            sh "aws eks --region us-west-2 update-kubeconfig --name eks-cluster-EKS-Cluster"
+                            sh "aws eks --region us-west-2 update-kubeconfig --name capstone-eks-cluster-EKS-Cluster"
                         }
                     }
             }
