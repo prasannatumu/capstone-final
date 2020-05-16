@@ -72,21 +72,11 @@ pipeline {
 				    withAWS(region:'us-west-2', credentials:'mini') {
 					    sh '''
 						    kubectl apply -f deploy.yaml
+						    kubectl set image --record -f deploy.yaml capstone-image=pras1905/udacity-static-capstone:${env.BUILD_ID}
 					    '''
-                    }
+                  								  }
 				}
 			}
 		}
-        stage('Set Image') {
-			steps {
-                dir('k8s') {
-				    withAWS(region:'us-west-2', credentials:'mini') {
-					    sh '''
-						    kubectl set image capstone-image=pras1905/udacity-static-capstone:${env.BUILD_ID} --record
-					    '''
-                    }
-				}
-			}
-		}
-    }
+            }
 }
